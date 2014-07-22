@@ -1,4 +1,4 @@
-package com.snowgears.grapplinghook;
+package com.caved_in.grapplinghook;
 
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;

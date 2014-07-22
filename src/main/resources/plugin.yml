@@ -1,0 +1,17 @@
+name: GrapplingHook
+author: Tanner Embry & Brandon Curtis (TheGamersCave)
+description: A simple grappling hook plugin.
+version: 1.0.0
+main: com.caved_in.grapplinghook.GrapplingHook
+depend: [Commons]
+permissions:
+    grapplinghook.command.give:
+        description: Allows player to use command /gh give
+        default: op
+    grapplinghook.player.nocooldown:
+        description: Player ignores grapple cooldown
+        default: op
+commands:
+   gh:
+      description: GH GIVE gives a grappling hook.
+      usage: /<command>
