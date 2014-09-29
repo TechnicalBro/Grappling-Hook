@@ -1,5 +1,6 @@
 package com.caved_in.grapplinghook;
 
+import com.caved_in.commons.time.Cooldown;
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -10,7 +11,6 @@ import org.bukkit.event.HandlerList;
 import org.bukkit.inventory.ItemStack;
 
 public class PlayerGrappleEvent extends Event implements Cancellable{
-
 	 private static final HandlerList handlers = new HandlerList();
 	    private Player player;
 	 	private Entity entity;

@@ -38,7 +38,7 @@ public class GrapplingHook extends BukkitPlugin {
 
 	@Override
 	public String getVersion() {
-		return "1.0.0";
+		return "1.0.2";
 	}
 
 	@Override
@@ -57,14 +57,14 @@ public class GrapplingHook extends BukkitPlugin {
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-			Commons.debug("Created default plugin config");
+			debug("Created default plugin config");
 		} else {
 			try {
 				pluginConfig = serializer.read(PluginConfig.class,configFile);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-			Commons.debug("Loaded config for plugin");
+			debug("Loaded config for plugin");
 		}
 	}
 }

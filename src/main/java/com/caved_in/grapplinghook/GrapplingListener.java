@@ -1,7 +1,9 @@
 package com.caved_in.grapplinghook;
 
+import com.caved_in.commons.entity.Entities;
 import com.caved_in.commons.player.Players;
 import com.caved_in.commons.plugin.Plugins;
+import com.caved_in.commons.time.Cooldown;
 import com.caved_in.grapplinghook.config.PluginConfig;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -24,6 +26,8 @@ import com.caved_in.grapplinghook.api.HookAPI;
 
 public class GrapplingListener implements Listener {
 
+
+	private Cooldown grappleCooldown = new Cooldown(1);
 	@EventHandler
 	public void onAttack(EntityDamageByEntityEvent event) {
 
@@ -67,6 +71,10 @@ public class GrapplingListener implements Listener {
 
 		final Player player = event.getPlayer();
 
+		if (grappleCooldown.isOnCooldown(player)) {
+			return;
+		}
+
 //		event.getHookItem().setDurability((short) -10);
 
 		Entity e = event.getPulledEntity();
@@ -84,14 +92,14 @@ public class GrapplingListener implements Listener {
 				{
 					pullPlayerSlightly(player, loc);
 				} else {
-					pullEntityToLocation(player, loc);
+					Entities.pullEntityToLocation(player, loc);
 				}
 			}
 		} else { //the player is pulling an entity to them
 			if (pluginConfig.isTeleportHooked()) {
 				e.teleport(loc);
 			} else {
-				pullEntityToLocation(e, loc);
+				Entities.pullEntityToLocation(e, loc);
 				if (e instanceof Item) {
 					ItemStack is = ((Item) e).getItemStack();
 					String itemName = is.getType().toString().replace("_", " ").toLowerCase();
@@ -101,10 +109,7 @@ public class GrapplingListener implements Listener {
 		}
 
 		HookAPI.playGrappleSound(player.getLocation());
-//
-//		if (GrapplingHook.timeBetweenUses != 0) {
-//			HookAPI.addPlayerCooldown(player, GrapplingHook.timeBetweenUses);
-//		}
+		grappleCooldown.setOnCooldown(player);
 	}
 
 	@EventHandler(priority = EventPriority.HIGHEST)
@@ -195,84 +200,4 @@ public class GrapplingListener implements Listener {
 		Vector vector = loc.toVector().subtract(playerLoc.toVector());
 		p.setVelocity(vector);
 	}
-
-//	//Code from r306 roll the dice
-//	private void pullEntityToLocation(final Entity e, Location loc){
-//		Location entityLoc = e.getLocation();
-//			
-//		final Vector velocity = loc.toVector().subtract(entityLoc.subtract(0, 1, 0).toVector()).normalize().multiply(new Vector(2, 2, 2));
-//		
-//		if (Math.abs(loc.getBlockY() - entityLoc.getBlockY()) < 2 && loc.distance(entityLoc) > 4)
-//		{
-//
-//			e.setVelocity(velocity.multiply(new Vector(1, 1, 1)));
-//
-//			plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable()
-//			{
-//				@Override
-//				public void run() 
-//				{
-//					e.setVelocity(velocity.multiply(new Vector(1, 1, 1)));
-//					//player.setVelocity(location.toVector().subtract(player.getLocation().subtract(0, 1, 0).toVector().normalize().multiply(2)));
-//
-//				}
-//
-//			}, 1L);
-//		}
-//		else
-//		{
-//			e.setVelocity(velocity);
-//
-//			plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable()
-//			{
-//				@Override
-//				public void run() 
-//				{
-//					e.setVelocity(velocity.multiply(new Vector(1, 1, 1)));
-//					//player.setVelocity(location.toVector().subtract(player.getLocation().subtract(0, 1, 0).toVector().normalize().multiply(0.5)));
-//				}
-//			}, 0L);
-//		}
-//		addNoFall(e, 100);
-//	}
-
-	//better method for pulling
-	private void pullEntityToLocation(final Entity e, Location loc) {
-		Location entityLoc = e.getLocation();
-
-		entityLoc.setY(entityLoc.getY() + 0.5);
-		e.teleport(entityLoc);
-
-		double g = -0.08;
-		double d = loc.distance(entityLoc);
-		double t = d;
-		double v_x = (1.0 + 0.07 * t) * (loc.getX() - entityLoc.getX()) / t;
-		double v_y = (1.0 + 0.03 * t) * (loc.getY() - entityLoc.getY()) / t - 0.5 * g * t;
-		double v_z = (1.0 + 0.07 * t) * (loc.getZ() - entityLoc.getZ()) / t;
-
-		Vector v = e.getVelocity();
-		v.setX(v_x);
-		v.setY(v_y);
-		v.setZ(v_z);
-		e.setVelocity(v);
-
-//		addNoFall(e, 100);
-	}
-
-//	public void addNoFall(final Entity e, int ticks) {
-//		if (noFallEntities.containsKey(e.getEntityId())) {
-//			Bukkit.getServer().getScheduler().cancelTask(noFallEntities.get(e.getEntityId()));
-//		}
-//
-//		int taskId = plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
-//			@Override
-//			public void run() {
-//				if (noFallEntities.containsKey(e.getEntityId())) {
-//					noFallEntities.remove(e.getEntityId());
-//				}
-//			}
-//		}, ticks);
-//
-//		noFallEntities.put(e.getEntityId(), taskId);
-//	}
 }
