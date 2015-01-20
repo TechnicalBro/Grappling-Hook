@@ -102,7 +102,7 @@ public class GrapplingListener implements Listener {
                 e.teleport(loc);
             } else {
 //                Entities.pullEntityToLocation(e,loc);
-                pullEntityToLocation(e, loc);
+                Entities.pullEntityToLocation(e, loc);
                 if (e instanceof Item) {
                     ItemStack is = ((Item) e).getItemStack();
                     String itemName = is.getType().toString().replace("_", " ").toLowerCase();
@@ -121,7 +121,6 @@ public class GrapplingListener implements Listener {
         Player player = event.getPlayer();
 
         if (!HookAPI.isGrapplingHook(player.getItemInHand())) {
-            Chat.debug(player.getName() + " does not have  grappling hook in their hand");
             return;
         }
 
@@ -129,7 +128,6 @@ public class GrapplingListener implements Listener {
 
         switch (state) {
             case CAUGHT_FISH:
-                Chat.debug("Player " + player.getName() + " is fishing with a grappling hook..");
                 event.setCancelled(true);
                 break;
             case CAUGHT_ENTITY:
@@ -148,64 +146,14 @@ public class GrapplingListener implements Listener {
                     }
                 }
 
-                Chat.debug("Calling grapple player to loc " + Messages.locationCoords(groundLoc));
                 PlayerGrappleEvent playerGrappleLocEvent = new PlayerGrappleEvent(player, player, groundLoc);
                 Plugins.callEvent(playerGrappleLocEvent);
                 break;
             default:
                 break;
         }
-
-        if (state != PlayerFishEvent.State.IN_GROUND && state != PlayerFishEvent.State.FISHING) {
-            Chat.debug("State for " + player.getName() + " is " + event.getState().name());
-            return;
-        }
     }
 
-//	//FOR HOOKING AN ITEM AND PULLING TOWARD YOU
-//	public void pullItemToLocation(Item i, Location loc){
-//		ItemStack is = i.getItemStack();
-//		i.getWorld().dropItemNaturally(loc, is);
-//		i.remove();
-//	}
-//	
-//	//FOR HOOKING AN ITEM AND PULLING TOWARD YOU
-//	public void pullItemToLocation(Entity e, Location loc){
-//		Location oLoc = e.getLocation().add(0, 1, 0);
-//		Location pLoc = loc;
-//	
-//		// Velocity from Minecraft Source. 
-//		double d1 = pLoc.getX() - oLoc.getX();
-//		double d3 = pLoc.getY() - oLoc.getY();
-//		double d5 = pLoc.getZ() - oLoc.getZ();
-//		double d7 = ((float) Math
-//				.sqrt((d1 * d1 + d3 * d3 + d5 * d5)));
-//		double d9 = 0.10000000000000001D;
-//		double motionX = d1 * d9;
-//		double motionY = d3 * d9 + (double) ((float) Math.sqrt(d7))
-//				* 0.080000000000000002D;
-//		double motionZ = d5 * d9;
-//		e.setVelocity(new Vector(motionX, motionY, motionZ));
-//	}
-
-//	//FOR HOOKING AN ENTITY AND PULLING TOWARD YOU
-	private void pullEntityToLocation(Entity e, Location loc){
-		Location entityLoc = e.getLocation();
-
-		double dX = entityLoc.getX() - loc.getX();
-		double dY = entityLoc.getY() - loc.getY();
-		double dZ = entityLoc.getZ() - loc.getZ();
-
-		double yaw = Math.atan2(dZ, dX);
-		double pitch = Math.atan2(Math.sqrt(dZ * dZ + dX * dX), dY) + Math.PI;
-
-		double X = Math.sin(pitch) * Math.cos(yaw);
-		double Y = Math.sin(pitch) * Math.sin(yaw);
-		double Z = Math.cos(pitch);
-
-		Vector vector = new Vector(X, Z, Y);
-		e.setVelocity(vector.multiply(8));
-	}
 
     //For pulling a player slightly
     private void pullPlayerSlightly(Player p, Location loc) {
