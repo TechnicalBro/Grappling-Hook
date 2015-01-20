@@ -1,5 +1,7 @@
 package com.caved_in.grapplinghook;
 
+import com.caved_in.commons.Messages;
+import com.caved_in.commons.chat.Chat;
 import com.caved_in.commons.entity.Entities;
 import com.caved_in.commons.player.Players;
 import com.caved_in.commons.plugin.Plugins;
@@ -26,122 +28,139 @@ import com.caved_in.grapplinghook.api.HookAPI;
 
 public class GrapplingListener implements Listener {
 
+    private Cooldown grappleCooldown = new Cooldown(1);
 
-	private Cooldown grappleCooldown = new Cooldown(1);
-	@EventHandler
-	public void onAttack(EntityDamageByEntityEvent event) {
+    @EventHandler
+    public void onAttack(EntityDamageByEntityEvent event) {
 
-		if (event.getDamager() instanceof Fish) {
-			Fish hook = (Fish) event.getDamager();
-			if (!(hook.getShooter() instanceof Player)) {
-				return;
-			}
-			Player player = (Player) hook.getShooter();
+        if (event.getDamager() instanceof Fish) {
+            Fish hook = (Fish) event.getDamager();
+            if (!(hook.getShooter() instanceof Player)) {
+                return;
+            }
+            Player player = (Player) hook.getShooter();
 
-			if (!HookAPI.isGrapplingHook(player.getItemInHand())) {
-				return;
-			}
+            if (!HookAPI.isGrapplingHook(player.getItemInHand())) {
+                return;
+            }
 
-			if (event.getEntity() instanceof Player) {
-				Player hooked = (Player) event.getEntity();
-				if (hooked.hasPermission("grapplinghook.player.nopull")) {
-					event.setCancelled(true);
-				} else {
-					Players.sendMessage(hooked, PluginMessages.hookedByPlayer(player));
-					Players.sendMessage(player, PluginMessages.hookedPlayer(hooked));
-				}
-			} else {
-				Players.sendMessage(player, PluginMessages.hookedEntity(event.getEntity()));
-			}
-		}
-	}
+            if (event.getEntity() instanceof Player) {
+                Player hooked = (Player) event.getEntity();
+                if (hooked.hasPermission("grapplinghook.player.nopull")) {
+                    event.setCancelled(true);
+                } else {
+                    Chat.message(hooked, PluginMessages.hookedByPlayer(player));
+                    Chat.message(player, PluginMessages.hookedPlayer(hooked));
+                }
+            } else {
+                Chat.message(player, PluginMessages.hookedEntity(event.getEntity()));
+            }
+        }
+    }
 
-	@EventHandler(priority = EventPriority.HIGHEST)
-	public void onEntityDamageEvent(EntityDamageEvent event) {
-		if (event.getCause() == DamageCause.FALL) {
-			event.setCancelled(true);
-		}
-	}
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onEntityDamageEvent(EntityDamageEvent event) {
+        if (event.getCause() == DamageCause.FALL) {
+            event.setCancelled(true);
+        }
+    }
 
-	@EventHandler(priority = EventPriority.MONITOR)
-	public void onGrapple(PlayerGrappleEvent event) {
-		if (event.isCancelled()) {
-			return;
-		}
+    @EventHandler()
+    public void onGrapple(PlayerGrappleEvent event) {
+        if (event.isCancelled()) {
+            return;
+        }
 
-		final Player player = event.getPlayer();
+        final Player player = event.getPlayer();
 
-		if (grappleCooldown.isOnCooldown(player)) {
-			return;
-		}
+        if (grappleCooldown.isOnCooldown(player)) {
+            return;
+        }
 
 //		event.getHookItem().setDurability((short) -10);
 
-		Entity e = event.getPulledEntity();
-		Location loc = event.getPullLocation();
+        Entity e = event.getPulledEntity();
+        Location loc = event.getPullLocation();
 
-		PluginConfig pluginConfig = GrapplingHook.getPluginConfig();
+        PluginConfig pluginConfig = GrapplingHook.getPluginConfig();
 
-		if (player.equals(e)) { //the player is pulling themself to a location
-			if (pluginConfig.isTeleportHooked()) {
-				loc.setPitch(player.getLocation().getPitch());
-				loc.setYaw(player.getLocation().getYaw());
-				player.teleport(loc);
-			} else {
-				if (player.getLocation().distance(loc) < 3) //hook is too close to player
-				{
-					pullPlayerSlightly(player, loc);
-				} else {
-					Entities.pullEntityToLocation(player, loc);
-				}
-			}
-		} else { //the player is pulling an entity to them
-			if (pluginConfig.isTeleportHooked()) {
-				e.teleport(loc);
-			} else {
-				Entities.pullEntityToLocation(e, loc);
-				if (e instanceof Item) {
-					ItemStack is = ((Item) e).getItemStack();
-					String itemName = is.getType().toString().replace("_", " ").toLowerCase();
-					player.sendMessage(ChatColor.GOLD + "You have hooked a stack of " + is.getAmount() + " " + itemName + "!");
-				}
-			}
-		}
+        if (player.equals(e)) { //the player is pulling themself to a location
+            if (pluginConfig.isTeleportHooked()) {
+                loc.setPitch(player.getLocation().getPitch());
+                loc.setYaw(player.getLocation().getYaw());
+                player.teleport(loc);
+            } else {
+                if (player.getLocation().distance(loc) < 3) //hook is too close to player
+                {
+                    pullPlayerSlightly(player, loc);
+                } else {
+                    Entities.pullEntityToLocation(player, loc);
+                }
+            }
+        } else { //the player is pulling an entity to them
+            if (pluginConfig.isTeleportHooked()) {
+                e.teleport(loc);
+            } else {
+//                Entities.pullEntityToLocation(e,loc);
+                pullEntityToLocation(e, loc);
+                if (e instanceof Item) {
+                    ItemStack is = ((Item) e).getItemStack();
+                    String itemName = is.getType().toString().replace("_", " ").toLowerCase();
+                    player.sendMessage(ChatColor.GOLD + "You have hooked a stack of " + is.getAmount() + " " + itemName + "!");
+                }
+            }
+        }
 
-		HookAPI.playGrappleSound(player.getLocation());
-		grappleCooldown.setOnCooldown(player);
-	}
+        HookAPI.playGrappleSound(player.getLocation());
+        grappleCooldown.setOnCooldown(player);
+    }
 
-	@EventHandler(priority = EventPriority.HIGHEST)
-	public void fishEvent(PlayerFishEvent event) //called before projectileLaunchEvent
-	{
-		Player player = event.getPlayer();
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void fishEvent(PlayerFishEvent event) //called before projectileLaunchEvent
+    {
+        Player player = event.getPlayer();
 
-		if (!HookAPI.isGrapplingHook(player.getItemInHand())) {
-			return;
-		}
+        if (!HookAPI.isGrapplingHook(player.getItemInHand())) {
+            Chat.debug(player.getName() + " does not have  grappling hook in their hand");
+            return;
+        }
 
-		if (event.getState() == org.bukkit.event.player.PlayerFishEvent.State.IN_GROUND) {
+        PlayerFishEvent.State state = event.getState();
 
-			Location loc = event.getHook().getLocation();
+        switch (state) {
+            case CAUGHT_FISH:
+                Chat.debug("Player " + player.getName() + " is fishing with a grappling hook..");
+                event.setCancelled(true);
+                break;
+            case CAUGHT_ENTITY:
+                event.setCancelled(true);
+                PlayerGrappleEvent playerGrappleEntityEvent = new PlayerGrappleEvent(player, event.getCaught(), player.getLocation());
+                Plugins.callEvent(playerGrappleEntityEvent);
+                break;
+            case FAILED_ATTEMPT:
+            case IN_GROUND:
+                Location groundLoc = event.getHook().getLocation();
+                for (Entity ent : event.getHook().getNearbyEntities(1.5, 1, 1.5)) {
+                    if (ent instanceof Item) {
+                        PlayerGrappleEvent grappleItemEvent = new PlayerGrappleEvent(player, ent, player.getLocation());
+                        Plugins.callEvent(grappleItemEvent);
+                        return;
+                    }
+                }
 
-			for (Entity ent : event.getHook().getNearbyEntities(1.5, 1, 1.5)) {
-				if (ent instanceof Item) {
-					PlayerGrappleEvent e = new PlayerGrappleEvent(player, ent, player.getLocation());
-					Plugins.callEvent(e);
-					return;
-				}
-			}
-			PlayerGrappleEvent e = new PlayerGrappleEvent(player, player, loc);
-			Plugins.callEvent(e);
-		} else if (event.getState() == org.bukkit.event.player.PlayerFishEvent.State.CAUGHT_ENTITY) {
-			event.setCancelled(true);
-			PlayerGrappleEvent e = new PlayerGrappleEvent(player, event.getCaught(), player.getLocation());
-			Plugins.callEvent(e);
-		} else if (event.getState() == org.bukkit.event.player.PlayerFishEvent.State.CAUGHT_FISH) {
-			event.setCancelled(true);
-		}
-	}
+                Chat.debug("Calling grapple player to loc " + Messages.locationCoords(groundLoc));
+                PlayerGrappleEvent playerGrappleLocEvent = new PlayerGrappleEvent(player, player, groundLoc);
+                Plugins.callEvent(playerGrappleLocEvent);
+                break;
+            default:
+                break;
+        }
+
+        if (state != PlayerFishEvent.State.IN_GROUND && state != PlayerFishEvent.State.FISHING) {
+            Chat.debug("State for " + player.getName() + " is " + event.getState().name());
+            return;
+        }
+    }
 
 //	//FOR HOOKING AN ITEM AND PULLING TOWARD YOU
 //	public void pullItemToLocation(Item i, Location loc){
@@ -170,34 +189,34 @@ public class GrapplingListener implements Listener {
 //	}
 
 //	//FOR HOOKING AN ENTITY AND PULLING TOWARD YOU
-//	private void pullEntityToLocation(Entity e, Location loc){
-//		Location entityLoc = e.getLocation();
-//		
-//		double dX = entityLoc.getX() - loc.getX();
-//		double dY = entityLoc.getY() - loc.getY();
-//		double dZ = entityLoc.getZ() - loc.getZ();
-//		
-//		double yaw = Math.atan2(dZ, dX);
-//		double pitch = Math.atan2(Math.sqrt(dZ * dZ + dX * dX), dY) + Math.PI;
-//		
-//		double X = Math.sin(pitch) * Math.cos(yaw);
-//		double Y = Math.sin(pitch) * Math.sin(yaw);
-//		double Z = Math.cos(pitch);
-//		 
-//		Vector vector = new Vector(X, Z, Y);
-//		e.setVelocity(vector.multiply(8));
-//	}
+	private void pullEntityToLocation(Entity e, Location loc){
+		Location entityLoc = e.getLocation();
 
-	//For pulling a player slightly
-	private void pullPlayerSlightly(Player p, Location loc) {
-		if (loc.getY() > p.getLocation().getY()) {
-			p.setVelocity(new Vector(0, 0.25, 0));
-			return;
-		}
+		double dX = entityLoc.getX() - loc.getX();
+		double dY = entityLoc.getY() - loc.getY();
+		double dZ = entityLoc.getZ() - loc.getZ();
 
-		Location playerLoc = p.getLocation();
+		double yaw = Math.atan2(dZ, dX);
+		double pitch = Math.atan2(Math.sqrt(dZ * dZ + dX * dX), dY) + Math.PI;
 
-		Vector vector = loc.toVector().subtract(playerLoc.toVector());
-		p.setVelocity(vector);
+		double X = Math.sin(pitch) * Math.cos(yaw);
+		double Y = Math.sin(pitch) * Math.sin(yaw);
+		double Z = Math.cos(pitch);
+
+		Vector vector = new Vector(X, Z, Y);
+		e.setVelocity(vector.multiply(8));
 	}
+
+    //For pulling a player slightly
+    private void pullPlayerSlightly(Player p, Location loc) {
+        if (loc.getY() > p.getLocation().getY()) {
+            p.setVelocity(new Vector(0, 0.25, 0));
+            return;
+        }
+
+        Location playerLoc = p.getLocation();
+
+        Vector vector = loc.toVector().subtract(playerLoc.toVector());
+        p.setVelocity(vector);
+    }
 }

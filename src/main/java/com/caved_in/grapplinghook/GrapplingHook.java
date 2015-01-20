@@ -5,6 +5,7 @@ import java.io.File;
 
 import com.caved_in.commons.Commons;
 import com.caved_in.commons.plugin.BukkitPlugin;
+import com.caved_in.grapplinghook.command.GrapplingHookCommand;
 import com.caved_in.grapplinghook.config.PluginConfig;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
@@ -29,6 +30,8 @@ public class GrapplingHook extends BukkitPlugin {
 	public void startup() {
 		instance = this;
 		registerListeners(new GrapplingListener());
+
+		registerCommands(new GrapplingHookCommand());
 	}
 
 	@Override
@@ -38,7 +41,7 @@ public class GrapplingHook extends BukkitPlugin {
 
 	@Override
 	public String getVersion() {
-		return "1.0.2";
+		return "1.0.3";
 	}
 
 	@Override

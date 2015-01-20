@@ -6,7 +6,7 @@
 
     <groupId>com.caved_in</groupId>
     <artifactId>grapplinghook</artifactId>
-    <version>1.0.2</version>
+    <version>1.0.3</version>
 
     <build>
         <sourceDirectory>${basedir}/src/main/java</sourceDirectory>
@@ -61,13 +61,13 @@
     <dependency>
         <groupId>com.caved_in</groupId>
         <artifactId>commons</artifactId>
-        <version>LATEST</version>
+        <version>1.7.4</version>
     </dependency>
     <!--Craftbukkit -->
     <dependency>
-        <groupId>org.bukkit</groupId>
-        <artifactId>craftbukkit</artifactId>
-        <version>LATEST</version>
+        <groupId>org.spigotmc</groupId>
+        <artifactId>spigot</artifactId>
+        <version>1.8-R0.1-SNAPSHOT</version>
     </dependency>
     </dependencies>
 
