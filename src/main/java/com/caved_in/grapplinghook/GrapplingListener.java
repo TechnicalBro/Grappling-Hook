@@ -1,5 +1,8 @@
 package com.caved_in.grapplinghook;
 
+import com.caved_in.commons.Messages;
+import com.caved_in.commons.block.Blocks;
+import com.caved_in.commons.chat.Chat;
 import com.caved_in.commons.entity.Entities;
 import com.caved_in.commons.player.Players;
 import com.caved_in.commons.plugin.Plugins;
@@ -26,8 +29,8 @@ import com.caved_in.grapplinghook.api.HookAPI;
 
 public class GrapplingListener implements Listener {
 
-
 	private Cooldown grappleCooldown = new Cooldown(1);
+
 	@EventHandler
 	public void onAttack(EntityDamageByEntityEvent event) {
 
@@ -47,11 +50,11 @@ public class GrapplingListener implements Listener {
 				if (hooked.hasPermission("grapplinghook.player.nopull")) {
 					event.setCancelled(true);
 				} else {
-					Players.sendMessage(hooked, PluginMessages.hookedByPlayer(player));
-					Players.sendMessage(player, PluginMessages.hookedPlayer(hooked));
+					Chat.message(hooked, PluginMessages.hookedByPlayer(player));
+					Chat.message(player, PluginMessages.hookedPlayer(hooked));
 				}
 			} else {
-				Players.sendMessage(player, PluginMessages.hookedEntity(event.getEntity()));
+				Chat.message(player, PluginMessages.hookedEntity(event.getEntity()));
 			}
 		}
 	}
@@ -63,7 +66,7 @@ public class GrapplingListener implements Listener {
 		}
 	}
 
-	@EventHandler(priority = EventPriority.MONITOR)
+	@EventHandler()
 	public void onGrapple(PlayerGrappleEvent event) {
 		if (event.isCancelled()) {
 			return;
@@ -100,10 +103,10 @@ public class GrapplingListener implements Listener {
 				e.teleport(loc);
 			} else {
 				Entities.pullEntityToLocation(e, loc);
-				if (e instanceof Item) {
+				if (e instanceof Item) { //TODO Teleport the item to the player.
 					ItemStack is = ((Item) e).getItemStack();
 					String itemName = is.getType().toString().replace("_", " ").toLowerCase();
-					player.sendMessage(ChatColor.GOLD + "You have hooked a stack of " + is.getAmount() + " " + itemName + "!");
+					Chat.message(player, "&6You have hooked a stack of " + is.getAmount() + " " + itemName + "!");
 				}
 			}
 		}
@@ -121,72 +124,54 @@ public class GrapplingListener implements Listener {
 			return;
 		}
 
-		if (event.getState() == org.bukkit.event.player.PlayerFishEvent.State.IN_GROUND) {
+		PlayerFishEvent.State state = event.getState();
 
-			Location loc = event.getHook().getLocation();
+		switch (state) {
+			case CAUGHT_FISH:
+				event.setCancelled(true);
+				break;
+//			TODO Enable grappling players.
+			case CAUGHT_ENTITY:
+				event.setCancelled(true);
+				PlayerGrappleEvent playerGrappleEntityEvent = new PlayerGrappleEvent(player, event.getCaught(), player.getLocation());
+				Plugins.callEvent(playerGrappleEntityEvent);
 
-			for (Entity ent : event.getHook().getNearbyEntities(1.5, 1, 1.5)) {
-				if (ent instanceof Item) {
-					PlayerGrappleEvent e = new PlayerGrappleEvent(player, ent, player.getLocation());
-					Plugins.callEvent(e);
-					return;
+				if (playerGrappleEntityEvent.unhookAfterPull()) {
+					event.getHook().eject();
 				}
-			}
-			PlayerGrappleEvent e = new PlayerGrappleEvent(player, player, loc);
-			Plugins.callEvent(e);
-		} else if (event.getState() == org.bukkit.event.player.PlayerFishEvent.State.CAUGHT_ENTITY) {
-			event.setCancelled(true);
-			PlayerGrappleEvent e = new PlayerGrappleEvent(player, event.getCaught(), player.getLocation());
-			Plugins.callEvent(e);
-		} else if (event.getState() == org.bukkit.event.player.PlayerFishEvent.State.CAUGHT_FISH) {
-			event.setCancelled(true);
+				break;
+			case FAILED_ATTEMPT:
+				Location hookLocation = event.getHook().getLocation();
+				/*
+                On a failed attempt, we want to check if the location of the hook
+                is a solid block
+                 */
+				if (!Blocks.isSolid(hookLocation)) {
+					Chat.actionMessage(player, "&7Your grapple didn't hook anything");
+					break;
+				}
+			case IN_GROUND:
+				Location groundLoc = event.getHook().getLocation();
+				for (Entity ent : event.getHook().getNearbyEntities(1.5, 1, 1.5)) {
+					if (ent instanceof Item) {
+						PlayerGrappleEvent grappleItemEvent = new PlayerGrappleEvent(player, ent, player.getLocation());
+						Plugins.callEvent(grappleItemEvent);
+						return;
+					}
+				}
+
+				PlayerGrappleEvent playerGrappleLocEvent = new PlayerGrappleEvent(player, player, groundLoc);
+				Plugins.callEvent(playerGrappleLocEvent);
+
+				if (playerGrappleLocEvent.unhookAfterPull()) {
+					event.getHook().eject();
+				}
+				break;
+			default:
+				break;
 		}
 	}
 
-//	//FOR HOOKING AN ITEM AND PULLING TOWARD YOU
-//	public void pullItemToLocation(Item i, Location loc){
-//		ItemStack is = i.getItemStack();
-//		i.getWorld().dropItemNaturally(loc, is);
-//		i.remove();
-//	}
-//	
-//	//FOR HOOKING AN ITEM AND PULLING TOWARD YOU
-//	public void pullItemToLocation(Entity e, Location loc){
-//		Location oLoc = e.getLocation().add(0, 1, 0);
-//		Location pLoc = loc;
-//	
-//		// Velocity from Minecraft Source. 
-//		double d1 = pLoc.getX() - oLoc.getX();
-//		double d3 = pLoc.getY() - oLoc.getY();
-//		double d5 = pLoc.getZ() - oLoc.getZ();
-//		double d7 = ((float) Math
-//				.sqrt((d1 * d1 + d3 * d3 + d5 * d5)));
-//		double d9 = 0.10000000000000001D;
-//		double motionX = d1 * d9;
-//		double motionY = d3 * d9 + (double) ((float) Math.sqrt(d7))
-//				* 0.080000000000000002D;
-//		double motionZ = d5 * d9;
-//		e.setVelocity(new Vector(motionX, motionY, motionZ));
-//	}
-
-//	//FOR HOOKING AN ENTITY AND PULLING TOWARD YOU
-//	private void pullEntityToLocation(Entity e, Location loc){
-//		Location entityLoc = e.getLocation();
-//		
-//		double dX = entityLoc.getX() - loc.getX();
-//		double dY = entityLoc.getY() - loc.getY();
-//		double dZ = entityLoc.getZ() - loc.getZ();
-//		
-//		double yaw = Math.atan2(dZ, dX);
-//		double pitch = Math.atan2(Math.sqrt(dZ * dZ + dX * dX), dY) + Math.PI;
-//		
-//		double X = Math.sin(pitch) * Math.cos(yaw);
-//		double Y = Math.sin(pitch) * Math.sin(yaw);
-//		double Z = Math.cos(pitch);
-//		 
-//		Vector vector = new Vector(X, Z, Y);
-//		e.setVelocity(vector.multiply(8));
-//	}
 
 	//For pulling a player slightly
 	private void pullPlayerSlightly(Player p, Location loc) {
