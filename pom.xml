@@ -58,17 +58,17 @@
     </repositories>
 
     <dependencies>
-    <dependency>
-        <groupId>com.caved_in</groupId>
-        <artifactId>commons</artifactId>
-        <version>1.8.1</version>
-    </dependency>
-    <!--Craftbukkit -->
-    <dependency>
-        <groupId>org.spigotmc</groupId>
-        <artifactId>spigot</artifactId>
-        <version>1.8-R0.1-SNAPSHOT</version>
-    </dependency>
+        <dependency>
+            <groupId>com.caved_in</groupId>
+            <artifactId>commons</artifactId>
+            <version>1.8.8-2</version>
+        </dependency>
+        <!--Craftbukkit -->
+        <dependency>
+            <groupId>org.spigotmc</groupId>
+            <artifactId>spigot</artifactId>
+            <version>1.8.8-R0.1-SNAPSHOT</version>
+        </dependency>
     </dependencies>
 
 

@@ -1,28 +1,54 @@
-Grappling Hook
-==============
+# Grappling Hook - Get Over Here! (Bukkit / Spigot)
 
-Minecraft Bukkit Plugin: Grappling Hook
+Wouldn't minecraft be *awesome* if you could grapple other players, or even scale buildings / terrain with the toss of a hook, and pull? **Now you can!**
 
-Features:
-==============
+**Features**:
+* Pull yourself to locations
+* Pull entities (mobs, or items) to you
+* Extremely lightweight plugin. Won't lag your server *at all*.
+* Features an API for other plugins to operate on!
+* No permissions required (but are supported, if you want them)
+* No configuration requried! (Though, you can configure the plugin)
+* Totally plug and play!
 
-No commands necessary.
+**Plugin Commands and Permissions**:
+```
+/gh       ||   grapplinghook.give
+/gh get   ||   grapplinghook.get
+/gh give  ||   grapplinghook.give
+```
 
-Pull yourself to locations.
+**Installation**
+(Note: *Requires [Commons](http://www.github.com/TechnicalBro/Commons) as a Dependency*)
 
-Pull entities to you.
+1. Download Commons
+   * Place it in your plugins folder
+   * Configure it as you desire (After server has been started & stopped, once, to generate configuration file).
+2. Download / Compile Grappling Hook
+3. Place it into your plugins folder
+4. Start your server
+5. PLAY AWAY! It's ready to go!
+6. (Optional) Stop server, configure Grappling Hook, start server again!
+7. Give a Star here and review on Spigot?
 
-Pull items on the ground to you.
+**How to use the API**:
+```java
+//Import the API into your class
+import com.caved_in.grapplinghook.api.HookAPI;
+//Some more code here...
 
-Configurable durability on grappling hooks.
+//Check if an ItemStack is a Grappling Hook
+HookAPI.isGrapplingHook(item);
 
-No permissions required. (But are supported)
+//Create a grappling hook!
+ItemStack grapple = HookAPI.createGrapplingHook();
 
-No configuration required. (But is optional)
+//Play the custom sound effect when a player grapples.
+HookAPI.playGrappleSound(location);
+```
 
-Plug and Play.
+*Note: If you have any suggestions for features, requests, or problems to report please open an issue, or contact [me](http://www.twitter.com/TechnicalBro) via Twitter!*
 
-How To Use The API
-==============
+**It may be best, if you can code, to submit the requst for change as a pull request.**
 
-http://dev.bukkit.org/bukkit-plugins/grappling-hook/pages/api/
+Thanks so much, and happy Cdoe!
